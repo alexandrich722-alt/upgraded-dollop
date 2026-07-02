@@ -1,0 +1,111 @@
+/*
+# NOVA Life OS — Core Persistence Tables
+
+1. New Tables
+   - `nova_snapshots` — daily state snapshots for timeline/history feature
+     - id (uuid, pk)
+     - snapshot_date (date) — one per day
+     - state_json (jsonb) — compressed state snapshot
+     - life_score, clarity_score, energy_score, progress_score (int) — scores for fast querying
+     - tasks_done, habits_done, goals_progress (int) — daily metrics
+     - created_at (timestamptz)
+
+   - `nova_time_capsules` — user messages to their future self
+     - id (uuid, pk)
+     - message (text)
+     - reveal_at (timestamptz) — when to show
+     - created_at (timestamptz)
+     - revealed (boolean)
+
+   - `nova_pattern_cache` — cached AI pattern analysis results
+     - id (uuid, pk)
+     - pattern_type (text) — e.g. 'mood_habit_correlation', 'energy_peaks', 'productivity_pattern'
+     - analysis_json (jsonb) — the analysis result
+     - computed_at (timestamptz)
+     - valid_until (timestamptz)
+
+2. Security
+   - RLS enabled on all tables
+   - anon + authenticated can read/write (no auth required for single-tenant app)
+
+3. Notes
+   - All tables use USING (true) because this is a single-tenant local-first app with no multi-user auth
+   - Snapshots are upserted by date — one per day, updated if exists
+*/
+
+-- Snapshots table
+CREATE TABLE IF NOT EXISTS nova_snapshots (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  snapshot_date date NOT NULL DEFAULT CURRENT_DATE,
+  state_json jsonb,
+  life_score int DEFAULT 50,
+  clarity_score int DEFAULT 50,
+  energy_score int DEFAULT 50,
+  progress_score int DEFAULT 50,
+  tasks_done int DEFAULT 0,
+  habits_done int DEFAULT 0,
+  goals_progress int DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(snapshot_date)
+);
+
+ALTER TABLE nova_snapshots ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "anon_select_snapshots" ON nova_snapshots;
+CREATE POLICY "anon_select_snapshots" ON nova_snapshots FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "anon_insert_snapshots" ON nova_snapshots;
+CREATE POLICY "anon_insert_snapshots" ON nova_snapshots FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon_update_snapshots" ON nova_snapshots;
+CREATE POLICY "anon_update_snapshots" ON nova_snapshots FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon_delete_snapshots" ON nova_snapshots;
+CREATE POLICY "anon_delete_snapshots" ON nova_snapshots FOR DELETE TO anon, authenticated USING (true);
+
+-- Time capsules table
+CREATE TABLE IF NOT EXISTS nova_time_capsules (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  message text NOT NULL,
+  reveal_at timestamptz NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  revealed boolean NOT NULL DEFAULT false
+);
+
+ALTER TABLE nova_time_capsules ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "anon_select_capsules" ON nova_time_capsules;
+CREATE POLICY "anon_select_capsules" ON nova_time_capsules FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "anon_insert_capsules" ON nova_time_capsules;
+CREATE POLICY "anon_insert_capsules" ON nova_time_capsules FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon_update_capsules" ON nova_time_capsules;
+CREATE POLICY "anon_update_capsules" ON nova_time_capsules FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon_delete_capsules" ON nova_time_capsules;
+CREATE POLICY "anon_delete_capsules" ON nova_time_capsules FOR DELETE TO anon, authenticated USING (true);
+
+-- Pattern cache table
+CREATE TABLE IF NOT EXISTS nova_pattern_cache (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  pattern_type text NOT NULL,
+  analysis_json jsonb NOT NULL DEFAULT '{}',
+  computed_at timestamptz DEFAULT now(),
+  valid_until timestamptz DEFAULT (now() + interval '24 hours'),
+  UNIQUE(pattern_type)
+);
+
+ALTER TABLE nova_pattern_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "anon_select_patterns" ON nova_pattern_cache;
+CREATE POLICY "anon_select_patterns" ON nova_pattern_cache FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "anon_insert_patterns" ON nova_pattern_cache;
+CREATE POLICY "anon_insert_patterns" ON nova_pattern_cache FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon_update_patterns" ON nova_pattern_cache;
+CREATE POLICY "anon_update_patterns" ON nova_pattern_cache FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon_delete_patterns" ON nova_pattern_cache;
+CREATE POLICY "anon_delete_patterns" ON nova_pattern_cache FOR DELETE TO anon, authenticated USING (true);

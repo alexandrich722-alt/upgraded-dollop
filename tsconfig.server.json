@@ -1,0 +1,218 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 200, headers: corsHeaders });
+  }
+
+  try {
+    const { type, input, context, messages } = await req.json();
+
+    const geminiKey = Deno.env.get("GEMINI_API_KEY");
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+
+    // Build system prompt based on request type
+    const systemPrompt = buildSystemPrompt(type, context);
+    const userMessage = buildUserMessage(type, input, context);
+
+    let responseText = "";
+
+    if (geminiKey) {
+      responseText = await callGemini(geminiKey, systemPrompt, userMessage, messages);
+    } else if (openaiKey) {
+      responseText = await callOpenAI(openaiKey, systemPrompt, userMessage, messages);
+    } else {
+      // Intelligent mock fallback
+      responseText = generateMockResponse(type, input, context);
+    }
+
+    // Parse action cards from response
+    const actions = extractActions(responseText, type, context);
+    const cleanText = responseText.replace(/\[ACTION:[^\]]+\]/g, "").trim();
+
+    return new Response(
+      JSON.stringify({
+        text: cleanText,
+        actions,
+        isMock: !geminiKey && !openaiKey,
+        provider: geminiKey ? "gemini" : openaiKey ? "openai" : "mock",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: err.message, text: "AI temporarily unavailable. Try again.", actions: [], isMock: true }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
+
+async function callGemini(apiKey: string, system: string, user: string, history: any[] = []): Promise<string> {
+  const contents = [];
+  
+  // Add history
+  for (const msg of (history || []).slice(-8)) {
+    contents.push({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.text || msg.content || "" }],
+    });
+  }
+  contents.push({ role: "user", parts: [{ text: user }] });
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: system }] },
+        contents,
+        generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+      }),
+    }
+  );
+
+  if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini.";
+}
+
+async function callOpenAI(apiKey: string, system: string, user: string, history: any[] = []): Promise<string> {
+  const msgs: any[] = [{ role: "system", content: system }];
+  
+  for (const msg of (history || []).slice(-8)) {
+    msgs.push({ role: msg.role === "user" ? "user" : "assistant", content: msg.text || msg.content || "" });
+  }
+  msgs.push({ role: "user", content: user });
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: "gpt-4o-mini", messages: msgs, max_tokens: 1024, temperature: 0.7 }),
+  });
+
+  if (!res.ok) throw new Error(`OpenAI error: ${res.status}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "No response from OpenAI.";
+}
+
+function buildSystemPrompt(type: string, context: any): string {
+  const profile = context?.profile;
+  const taskCount = context?.tasks?.filter((t: any) => t.status !== "done" && !t.archived)?.length || 0;
+  const goalCount = context?.goals?.filter((g: any) => g.status === "active")?.length || 0;
+  const habitCount = context?.habits?.filter((h: any) => !h.archived)?.length || 0;
+  const recentMood = context?.reflections?.slice(0, 3)?.map((r: any) => r.mood)?.join(", ") || "unknown";
+
+  return `You are NOVA, an elite personal operating system and Chief of Staff for ${profile?.name || "the user"}.
+
+CURRENT CONTEXT:
+- Level: ${profile?.level || 1} | XP: ${profile?.xp || 0} | Life Score: ${profile?.lifeScore || 50}/100
+- Active tasks: ${taskCount} | Active goals: ${goalCount} | Habits tracked: ${habitCount}
+- Recent mood: ${recentMood}/10
+
+YOUR ROLE:
+You are not a generic AI assistant. You are a deeply personalized system that:
+1. Knows this person's goals, habits, patterns, and psychology
+2. Speaks directly and without fluff — like a brilliant friend who happens to know everything about them
+3. Always connects advice to their actual data
+4. Can suggest ACTIONS that modify their life system (create tasks, goals, habits)
+5. Detects patterns and proactively warns about risks
+
+RESPONSE FORMAT:
+- Be concise but substantive (3-6 paragraphs max)
+- Always reference specific data from their context
+- End with 1-2 concrete action suggestions
+- If you see a pattern, name it explicitly
+- Never be generic. Every word should be personalized.
+- Add [ACTION:create_task:title] syntax for actionable suggestions
+
+REQUEST TYPE: ${type}`;
+}
+
+function buildUserMessage(type: string, input: string, context: any): string {
+  const tasks = context?.tasks?.filter((t: any) => t.status !== "done" && !t.archived)?.slice(0, 10) || [];
+  const goals = context?.goals?.filter((g: any) => g.status === "active")?.slice(0, 5) || [];
+  const habits = context?.habits?.filter((h: any) => !h.archived)?.slice(0, 5) || [];
+  const recentReflections = context?.reflections?.slice(0, 3) || [];
+  const finance = context?.finance;
+
+  const contextStr = `
+TASKS (${tasks.length}): ${tasks.map((t: any) => `${t.title} [${t.priority}]`).join(", ")}
+GOALS: ${goals.map((g: any) => `${g.title} (${g.progress}%)`).join(", ")}
+HABITS: ${habits.map((h: any) => `${h.title} [streak:${h.streak}]`).join(", ")}
+RECENT MOOD: ${recentReflections.map((r: any) => r.mood).join(", ")}/10
+MONTHLY SPEND: $${finance?.transactions?.filter((t: any) => t.type === "expense" && t.date?.startsWith(new Date().toISOString().slice(0, 7)))?.reduce((a: number, t: any) => a + t.amount, 0)?.toFixed(0) || 0}`;
+
+  if (type === "chat") return `${input}\n\n---\nMY CURRENT DATA:\n${contextStr}`;
+  if (type === "daily_planning") return `Generate my personalized daily plan.\n${contextStr}`;
+  if (type === "weekly_review") return `Analyze my week and give me a deep review.\n${contextStr}`;
+  if (type === "burnout_risk") return `Assess my burnout risk and give actionable advice.\n${contextStr}`;
+  if (type === "reflection_analysis") return `Analyze my recent reflections and find patterns.\n${contextStr}`;
+  if (type === "finance_audit") return `Audit my finances and give concrete recommendations.\n${contextStr}`;
+  if (type === "mind_dump") return `Process this brain dump and organize it: "${input}"\n${contextStr}`;
+  if (type === "pattern_detection") return `Detect behavioral patterns in my data. What do you notice?\n${contextStr}`;
+  return `${input}\n${contextStr}`;
+}
+
+function extractActions(text: string, type: string, _context: any): any[] {
+  const actions: any[] = [];
+  
+  // Extract [ACTION:type:label] patterns from text
+  const actionRegex = /\[ACTION:([^:]+):([^\]]+)\]/g;
+  let match;
+  while ((match = actionRegex.exec(text)) !== null) {
+    actions.push({ type: match[1], label: match[2], description: match[2] });
+  }
+
+  // Add default actions based on type
+  if (actions.length === 0) {
+    if (type === "daily_planning") actions.push({ type: "start_mission", label: "Start Today's Mission", description: "Lock in your daily priorities" });
+    if (type === "mind_dump") {
+      actions.push({ type: "create_tasks", label: "Create tasks from dump", description: "Extract and add tasks" });
+      actions.push({ type: "save_reflection", label: "Save as reflection", description: "Log this as a journal entry" });
+    }
+    if (type === "burnout_risk") actions.push({ type: "reduce_load", label: "Reduce today's load", description: "Keep only 1-2 tasks" });
+    if (type === "finance_audit") actions.push({ type: "review_subs", label: "Review subscriptions", description: "Audit recurring payments" });
+    if (type === "weekly_review") actions.push({ type: "plan_week", label: "Plan next week", description: "Set weekly priorities" });
+  }
+
+  return actions;
+}
+
+function generateMockResponse(type: string, input: string, context: any): string {
+  const profile = context?.profile;
+  const tasks = context?.tasks?.filter((t: any) => t.status !== "done" && !t.archived) || [];
+  const goals = context?.goals?.filter((g: any) => g.status === "active") || [];
+  const habits = context?.habits?.filter((h: any) => !h.archived) || [];
+  const reflections = context?.reflections?.slice(0, 7) || [];
+  const avgMood = reflections.length ? (reflections.reduce((a: number, r: any) => a + r.mood, 0) / reflections.length).toFixed(1) : "5.0";
+
+  const name = profile?.name || "you";
+
+  if (type === "chat") {
+    return `I hear you, ${name}. Based on what you're sharing and your current data — ${tasks.length} active tasks, ${goals.length} goals at ${goals[0]?.progress || 0}% progress — here's my take:\n\n${input.length > 20 ? `The core of what you're dealing with is this: you're trying to move forward while carrying ${tasks.length} open items. That's cognitive load, not laziness.\n\nMy recommendation: pick the one task that, if done today, would make everything else feel easier. Do that first. Everything else can wait.` : "Tell me more. I need specifics to give you real advice."}\n\nWhat's your energy level right now?`;
+  }
+
+  if (type === "daily_planning") {
+    const top = tasks.slice(0, 3);
+    return `Good morning, ${name}. Here's your intelligence briefing:\n\nYour main goal "${goals[0]?.title || "—"}" is at ${goals[0]?.progress || 0}%. ${goals[0]?.progress < 50 ? "You're behind pace. Today needs real progress." : "Good trajectory. Maintain it."}\n\nTop 3 priorities:\n${top.map((t: any, i: number) => `${i + 1}. ${t.title} [${t.priority}]`).join("\n") || "No tasks set yet."}\n\nEnergy status: ${profile?.energyScore > 60 ? "Good — schedule deep work in the morning" : "Low — protect your energy, do admin tasks first"}\n\nHabit of the day: ${habits[0]?.title || "Set a habit to track"}\n\nThe one move that matters most today: ${top[0]?.title || "Set your #1 task"}`;
+  }
+
+  if (type === "mind_dump") {
+    return `Processed your brain dump, ${name}.\n\nI detected ${input.split(/[.!?\n]/).filter(s => s.trim()).length} thoughts. Here's what I see:\n\nAction items: Look for "need to", "should", "must" phrases — those are your tasks.\nIdeas: The speculative things are worth logging, not acting on immediately.\nEmotional signal: ${input.toLowerCase().includes("stress") || input.toLowerCase().includes("overwhelm") ? "I'm picking up stress. Before adding tasks, ask: what can I remove?" : "Your tone seems clear. Good state for decision-making."}\n\nRule: Don't add more than 3 new tasks from this dump. Pick the highest-impact ones.`;
+  }
+
+  if (type === "burnout_risk") {
+    const avgStress = reflections.length ? (reflections.reduce((a: number, r: any) => a + r.stress, 0) / reflections.length).toFixed(1) : "5";
+    const risk = parseFloat(avgStress) > 7 ? "HIGH" : parseFloat(avgStress) > 5 ? "MODERATE" : "LOW";
+    return `Burnout risk assessment for ${name}: **${risk}**\n\nAverage stress: ${avgStress}/10 | Average mood: ${avgMood}/10\nActive load: ${tasks.length} tasks\n\n${risk === "HIGH" ? "I'm concerned. Stress is elevated and you have too much open. Today: cancel anything non-essential, do one thing, rest. This is not optional." : risk === "MODERATE" ? "You're approaching a wall. Don't add more tasks. Finish 3, delete 2. Block 30 minutes of nothing." : "You're in good shape. Keep your current rhythm and review again Sunday."}\n\nNote: NOVA is not a medical service. If you feel in crisis, please reach out to a professional.`;
+  }
+
+  return `${name}, I'm analyzing your data and here's what I see: ${tasks.length} active tasks, mood averaging ${avgMood}/10. The pattern I notice: ${tasks.length > 10 ? "you tend to collect tasks faster than you complete them — this creates cognitive drag." : "your task load is manageable. Keep it focused."}\n\nMy recommendation: pick one thing, do it completely, then come back.`;
+}

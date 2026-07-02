@@ -1,0 +1,465 @@
+// NOVA Life OS — Core Type System v3
+
+export type ID = string;
+export type ISODate = string;
+export type EntityStatus = 'active' | 'archived' | 'completed' | 'paused';
+export type Priority = 'low' | 'medium' | 'high' | 'critical';
+export type EnergyLevel = 'low' | 'medium' | 'high' | 'peak';
+
+// ─── Core Entities ─────────────────────────────────────────────────────────────
+
+export interface Task {
+  id: ID;
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'done';
+  priority: Priority;
+  deadline: ISODate | null;
+  estimatedMinutes: number;
+  actualMinutes: number;
+  energyLevel: EnergyLevel;
+  projectId: ID | null;
+  goalId: ID | null;
+  tags: string[];
+  createdAt: ISODate;
+  updatedAt: ISODate;
+  completedAt: ISODate | null;
+  archived: boolean;
+  recurring: 'none' | 'daily' | 'weekly' | 'monthly';
+  parentTaskId: ID | null;
+}
+
+export interface Goal {
+  id: ID;
+  title: string;
+  description: string;
+  category: string;
+  why: string;
+  status: EntityStatus;
+  priority: Priority;
+  deadline: ISODate | null;
+  progress: number;
+  milestones: Milestone[];
+  metrics: string[];
+  obstacles: string[];
+  relatedProjects: ID[];
+  relatedHabits: ID[];
+  relatedTasks: ID[];
+  createdAt: ISODate;
+  updatedAt: ISODate;
+  archived: boolean;
+}
+
+export interface Milestone {
+  id: ID;
+  title: string;
+  done: boolean;
+}
+
+export interface Project {
+  id: ID;
+  title: string;
+  description: string;
+  purpose: string;
+  why: string;
+  category: string;
+  status: EntityStatus;
+  priority: Priority;
+  deadline: ISODate | null;
+  progress: number;
+  stages: string[];
+  tasks: ID[];
+  roadmap: string[];
+  risks: string[];
+  resources: string[];
+  relatedGoals: ID[];
+  relatedIdeas: string[];
+  history: string[];
+  aiRecommendations: string[];
+  createdAt: ISODate;
+  updatedAt: ISODate;
+  archived: boolean;
+}
+
+export interface Habit {
+  id: ID;
+  title: string;
+  description: string;
+  category: string;
+  why: string;
+  frequency: 'daily' | 'weekly' | 'custom';
+  target: number;
+  streak: number;
+  bestStreak: number;
+  history: ISODate[];
+  completionRate: number;
+  relatedGoalId: ID | null;
+  isBad: boolean;
+  stackedAfter: ID | null; // habit stacking — do this after habit X
+  createdAt: ISODate;
+  updatedAt: ISODate;
+  archived: boolean;
+}
+
+export interface Reflection {
+  id: ID;
+  date: ISODate;
+  text: string;
+  mood: number;
+  energy: number;
+  stress: number;
+  tags: string[];
+  insights: string[];
+  linkedGoals: ID[];
+  linkedTasks: ID[];
+  createdAt: ISODate;
+}
+
+export interface DailyNote {
+  id: ID;
+  date: ISODate;
+  energy: EnergyLevel;
+  mood: number;
+  mainFocus: string;
+  constraints: string;
+  eveningReview: string;
+  lesson: string;
+  createdAt: ISODate;
+}
+
+// ─── Finance ───────────────────────────────────────────────────────────────────
+
+export interface FinanceTransaction {
+  id: ID;
+  date: ISODate;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  description: string;
+  tags: string[];
+  createdAt: ISODate;
+}
+
+export interface BudgetCategory {
+  id: ID;
+  name: string;
+  limit: number;
+  color: string;
+}
+
+export interface Debt {
+  id: ID;
+  name: string;
+  amount: number;
+  remaining: number;
+  interestRate: number;
+  minPayment: number;
+  repaymentSchedule: { date: ISODate; amount: number; done: boolean }[];
+  createdAt: ISODate;
+}
+
+export interface SavingsGoal {
+  id: ID;
+  title: string;
+  target: number;
+  current: number;
+  deadline: ISODate | null;
+  createdAt: ISODate;
+}
+
+export interface Subscription {
+  id: ID;
+  name: string;
+  amount: number;
+  frequency: 'monthly' | 'yearly';
+  nextCharge: ISODate;
+  active: boolean;
+  createdAt: ISODate;
+}
+
+// ─── Social ────────────────────────────────────────────────────────────────────
+
+export interface Contact {
+  id: ID;
+  name: string;
+  relationship: string;
+  birthday: ISODate | null;
+  phone: string;
+  telegram: string;
+  notes: string;
+  giftIdeas: string[];
+  lastContactedAt: ISODate | null;
+  importance: number;
+  reminders: string[];
+  interactionLog: { date: ISODate; note: string }[];
+}
+
+// ─── Growth ────────────────────────────────────────────────────────────────────
+
+export interface Skill {
+  id: ID;
+  title: string;
+  description: string;
+  category: string;
+  level: number;
+  xp: number;
+  prerequisites: ID[];
+  practices: string[];
+  relatedHabits: ID[];
+  relatedGoals: ID[];
+  unlocks: string[];
+}
+
+export interface Quest {
+  id: ID;
+  title: string;
+  description: string;
+  duration: number;
+  status: EntityStatus;
+  xpReward: number;
+  stages: { title: string; done: boolean }[];
+  dailyMissions: string[];
+  linkedGoal: ID | null;
+  linkedHabits: ID[];
+  boss: string | null;
+  rewards: string[];
+  createdAt: ISODate;
+}
+
+export interface Boss {
+  id: ID;
+  name: string;
+  description: string;
+  hp: number;
+  maxHp: number;
+  attacks: string[];
+  weakness: string;
+  linkedBadPattern: string;
+  victoryCondition: string;
+  rewards: string[];
+  logs: string[];
+  defeated: boolean;
+}
+
+// ─── Mentors ───────────────────────────────────────────────────────────────────
+
+export interface Mentor {
+  id: ID;
+  name: string;
+  persona: string;
+  tone: string;
+  domain: string;
+  rules: string[];
+  dataAccess: string[];
+  trustLevel: number;
+  unlockableQuotes: string[];
+}
+
+export interface MentorMessage {
+  id: ID;
+  mentorId: ID;
+  text: string;
+  fromUser: boolean;
+  createdAt: ISODate;
+}
+
+// ─── Marketplace ───────────────────────────────────────────────────────────────
+
+export interface MarketplaceProduct {
+  id: ID;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  difficulty: string;
+  icon: string;
+  color: string;
+  permissions: string[];
+  preview: {
+    goals: number;
+    projects: number;
+    tasks: number;
+    habits: number;
+    quests: number;
+    mentors: number;
+    skills: number;
+    protocols: number;
+  };
+  adaptationQuestions: string[];
+  installData: {
+    goals: Partial<Goal>[];
+    projects: Partial<Project>[];
+    tasks: Partial<Task>[];
+    habits: Partial<Habit>[];
+    quests: Partial<Quest>[];
+    mentors: Partial<Mentor>[];
+    skills: Partial<Skill>[];
+    protocols: { name: string; steps: string[]; category: string }[];
+  };
+  firstMission: string[];
+  featured: boolean;
+}
+
+export interface MarketplaceInstall {
+  id: ID;
+  productId: ID;
+  productTitle: string;
+  installedAt: ISODate;
+  mode: 'full' | 'quests' | 'mentors' | 'dashboard' | 'sandbox';
+  progress: number;
+  activeQuests: ID[];
+  connectedMentors: ID[];
+  nextReview: ISODate | null;
+}
+
+// ─── Protocols ─────────────────────────────────────────────────────────────────
+
+export interface Protocol {
+  id: ID;
+  name: string;
+  description: string;
+  steps: string[];
+  category: string;
+}
+
+// ─── AI ────────────────────────────────────────────────────────────────────────
+
+export interface AIMessage {
+  id: ID;
+  role: 'user' | 'assistant';
+  text: string;
+  actions: AIAction[];
+  createdAt: ISODate;
+  isMock: boolean;
+}
+
+export interface AIAction {
+  id: ID;
+  type: string;
+  label: string;
+  description: string;
+  applied: boolean;
+  payload?: Record<string, unknown>;
+}
+
+// ─── Achievements ──────────────────────────────────────────────────────────────
+
+export type AchievementCategory =
+  | 'tasks' | 'goals' | 'habits' | 'finance' | 'social'
+  | 'growth' | 'reflection' | 'quests' | 'streaks' | 'meta';
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  category: AchievementCategory;
+  icon: string;
+  xpReward: number;
+  unlockedAt: ISODate | null;
+  condition: string; // human readable
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+// ─── Insights & Patterns ────────────────────────────────────────────────────────
+
+export interface PatternInsight {
+  id: string;
+  type: 'correlation' | 'warning' | 'celebration' | 'suggestion';
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  generatedAt: ISODate;
+  dismissed: boolean;
+}
+
+// ─── Time Capsule ──────────────────────────────────────────────────────────────
+
+export interface TimeCapsule {
+  id: string;
+  message: string;
+  revealAt: ISODate;
+  createdAt: ISODate;
+  revealed: boolean;
+}
+
+// ─── Settings & Profile ────────────────────────────────────────────────────────
+
+export interface Settings {
+  theme: 'dark' | 'light';
+  accentColor: string;
+  language: 'en' | 'ru';
+  pinEnabled: boolean;
+  pin: string | null;
+  aiProvider: 'mock' | 'gemini' | 'openai';
+  privacyMode: boolean;
+  dashboardCards: string[];
+  monthlyBudget: number; // moved here from finance for unified settings
+  budgetCategories: BudgetCategory[];
+  weekStartsOn: 0 | 1; // 0=Sunday, 1=Monday
+  dailyReviewTime: string; // HH:MM
+}
+
+export interface UserProfile {
+  name: string;
+  role: string;
+  avatar: string;
+  level: number;
+  xp: number;
+  totalXpEarned: number;
+  lifeScore: number;
+  clarityScore: number;
+  energyScore: number;
+  progressScore: number;
+  joinedAt: ISODate;
+  currentStreak: number; // consecutive days opened app
+  longestStreak: number;
+  lastActiveDate: ISODate;
+}
+
+// ─── Full State ────────────────────────────────────────────────────────────────
+
+export interface NovaState {
+  version: number;
+  profile: UserProfile;
+  goals: Goal[];
+  projects: Project[];
+  tasks: Task[];
+  habits: Habit[];
+  reflections: Reflection[];
+  dailyNotes: DailyNote[];
+  finance: {
+    transactions: FinanceTransaction[];
+    debts: Debt[];
+    savingsGoals: SavingsGoal[];
+    subscriptions: Subscription[];
+    monthlyBudget: number; // kept for backwards compat
+  };
+  contacts: Contact[];
+  skills: Skill[];
+  quests: Quest[];
+  bosses: Boss[];
+  mentors: Mentor[];
+  mentorMessages: MentorMessage[];
+  marketplaceInstalls: MarketplaceInstall[];
+  protocols: Protocol[];
+  aiMessages: AIMessage[];
+  settings: Settings;
+  todayMission: TodayMission | null;
+  achievements: Achievement[];
+  patternInsights: PatternInsight[];
+  timeCapsules: TimeCapsule[];
+}
+
+export interface TodayMission {
+  date: ISODate;
+  mainFocus: string;
+  topTasks: ID[];
+  energyStatus: string;
+  habitOfTheDay: ID | null;
+  financeSignal: string;
+  relationshipReminder: string;
+  riskWarning: string;
+  recoveryAction: string;
+  startedAt: ISODate | null;
+  completedAt: ISODate | null;
+}
