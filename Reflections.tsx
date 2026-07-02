@@ -4,7 +4,7 @@ import {
   Zap, LayoutDashboard, Bot, Mic, Target, FolderKanban, CheckSquare,
   Repeat, Wallet, BookOpen, Share2, GitBranch, TreePine, Swords,
   Skull, Users, Store, Package, Settings, ShieldCheck, Trophy,
-  Brain, Clock, Rocket, Battery, Heart, type LucideIcon,
+  Brain, Clock, type LucideIcon,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -19,9 +19,6 @@ export const navItems: NavItem[] = [
   // Command Center
   { id: 'today', label: 'Today Mission', icon: Zap, group: 'main' },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'main' },
-  { id: 'life-dashboard', label: 'Life Command', icon: Rocket, group: 'main' },
-  { id: 'energy', label: 'Energy Tracking', icon: Battery, group: 'main' },
-  { id: 'mood', label: 'Mood Check-In', icon: Heart, group: 'main' },
   { id: 'ai', label: 'AI Chief of Staff', icon: Bot, group: 'main' },
   { id: 'voice', label: 'Voice Capture', icon: Mic, group: 'main' },
 

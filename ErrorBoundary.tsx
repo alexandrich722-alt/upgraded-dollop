@@ -12,9 +12,6 @@ import { ALL_ACHIEVEMENTS } from './lib/achievements';
 // Eagerly loaded screens
 import TodayMission from './screens/TodayMission';
 import Dashboard from './screens/Dashboard';
-import LifeDashboard from './screens/LifeDashboard';
-import EnergyTracking from './screens/EnergyTracking';
-import MoodCheckIn from './screens/MoodCheckIn';
 import AIChief from './screens/AIChief';
 import VoiceCapture from './screens/VoiceCapture';
 import Goals from './screens/Goals';
@@ -41,7 +38,7 @@ const NovaKnows = lazy(() => import('./screens/NovaKnows'));
 const TimeCapsule = lazy(() => import('./screens/TimeCapsule'));
 
 const screenMap: Record<string, React.ComponentType> = {
-  today: TodayMission, dashboard: Dashboard, 'life-dashboard': LifeDashboard, energy: EnergyTracking, mood: MoodCheckIn, ai: AIChief, voice: VoiceCapture,
+  today: TodayMission, dashboard: Dashboard, ai: AIChief, voice: VoiceCapture,
   goals: Goals, projects: Projects, tasks: Tasks, habits: Habits, social: Social,
   skills: Skills, quests: Quests, mentors: Mentors, installed: Installed,
   protocols: Protocols, settings: Settings, privacy: Privacy,

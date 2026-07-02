@@ -2,7 +2,7 @@
 // Konami Code, Ghost Mode, Time Capsule, 365-day celebration
 
 import { useEffect, useState } from 'react';
-import { useStore } from './store';
+import { useStore } from '../store';
 
 const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
 

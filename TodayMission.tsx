@@ -1,8 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Target, FolderKanban, TrendingUp, Wallet, BookOpen, Clock, Calendar, Sparkles, Eye, EyeOff, Sun, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Target, FolderKanban, TrendingUp, Wallet, BookOpen, Clock, Calendar, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../store';
 import { Card, SectionHeader, ScoreRing, ProgressBar, Badge } from '../components/ui';
-import MorningBriefing from './MorningBriefing';
 
 const allCards = [
   { id: 'lifeScore', label: 'Life Score', color: 'cyan' },
@@ -23,19 +22,7 @@ const allCards = [
 export default function Dashboard() {
   const { state, updateSettings } = useStore();
   const [showToggle, setShowToggle] = useState(false);
-  const [showMorningBriefing, setShowMorningBriefing] = useState(false);
   const visible = state.settings.dashboardCards;
-
-  // Show Morning Briefing in the morning hours (5-11am) by default once per day
-  useEffect(() => {
-    const hour = new Date().getHours();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const lastMorningView = localStorage.getItem('nova_last_morning_briefing');
-    if (hour >= 6 && hour <= 10 && lastMorningView !== todayStr) {
-      setShowMorningBriefing(true);
-      localStorage.setItem('nova_last_morning_briefing', todayStr);
-    }
-  }, []);
 
   const toggleCard = (id: string) => {
     const next = visible.includes(id) ? visible.filter(c => c !== id) : [...visible, id];
@@ -195,37 +182,10 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto animate-fade-in">
-      {/* Morning Briefing Modal */}
-      {showMorningBriefing && (
-        <div className="fixed inset-0 z-50 bg-nova-bg/95 backdrop-blur-sm overflow-y-auto">
-          <div className="max-w-2xl mx-auto py-4 px-4 relative">
-            <button
-              onClick={() => setShowMorningBriefing(false)}
-              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-nova-surface transition-colors z-10"
-              aria-label="Close morning briefing"
-            >
-              <X className="w-5 h-5 text-nova-muted" />
-            </button>
-            <MorningBriefing onClose={() => setShowMorningBriefing(false)} />
-          </div>
-        </div>
-      )}
-
       <SectionHeader
         title="Dashboard"
         subtitle="Your life at a glance"
-        action={
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowMorningBriefing(true)}
-              className="btn-ghost text-xs flex items-center gap-1"
-              aria-label="Open morning briefing"
-            >
-              <Sun className="w-4 h-4" /> Morning Briefing
-            </button>
-            <button onClick={() => setShowToggle(!showToggle)} className="btn-ghost text-xs" aria-label="Customize dashboard">{showToggle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}{showToggle ? 'Hide' : 'Customize'}</button>
-          </div>
-        }
+        action={<button onClick={() => setShowToggle(!showToggle)} className="btn-ghost text-xs" aria-label="Customize dashboard">{showToggle ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}{showToggle ? 'Hide' : 'Customize'}</button>}
       />
       {showToggle && (
         <Card className="p-4 mb-4 animate-slide-up">
