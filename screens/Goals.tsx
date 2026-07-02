@@ -2073,3 +2073,6 @@ export const marketplaceCategories = [
   'Financial Freedom',
   'Creative Practice',
 ];
+
+
+export default marketplaceCategories
