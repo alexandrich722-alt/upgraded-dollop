@@ -2,9 +2,9 @@
 // Track mood, find correlations, get insights
 
 import { useState, useMemo, useEffect } from 'react';
-import { Heart, Sun, Cloud, CloudRain, TriangleAlert as AlertTriangle, TrendingUp, TrendingDown, Minus, ChevronRight, Smile, Meh, Frown, Brain, Coffee, Zap, Moon, Activity, ChartBar as BarChart3 } from 'lucide-react';
-import { useStore } from './store';
-import { Card, Badge, ProgressBar } from './components/ui';
+import { Heart, Sun, Cloud, CloudRain, AlertTriangle as AlertTriangle, TrendingUp, TrendingDown, Minus, ChevronRight, Smile, Meh, Frown, Brain, Coffee, Zap, Moon, Activity, BarChart as BarChart3 } from 'lucide-react';
+import { useStore } from '../store';
+import { Card, Badge, ProgressBar } from '../components/ui';
 
 interface MoodEntry {
   id: string;

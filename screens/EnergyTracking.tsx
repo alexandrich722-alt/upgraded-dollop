@@ -2,9 +2,9 @@
 // Track energy patterns, optimal work times, and context management
 
 import { useState, useMemo, useEffect } from 'react';
-import { Battery, BatteryMedium, BatteryLow, Sun, Moon, Brain, Coffee, Zap, TrendingUp, TrendingDown, Minus, ChevronUp, ChevronDown, Plus, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2, Clock } from 'lucide-react';
-import { useStore } from './store';
-import { Card, Badge, ProgressBar } from './components/ui';
+import { Battery, BatteryMedium, BatteryLow, Sun, Moon, Brain, Coffee, Zap, TrendingUp, TrendingDown, Minus, ChevronUp, ChevronDown, Plus, AlertTriangle as AlertTriangle, CheckCircle as CheckCircle2, Clock } from 'lucide-react';
+import { useStore } from '../store';
+import { Card, Badge, ProgressBar } from '../components/ui';
 
 interface EnergyLog {
   id: string;

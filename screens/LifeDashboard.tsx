@@ -2,9 +2,9 @@
 // Comprehensive command center view of all life areas
 
 import { useState, useMemo } from 'react';
-import { Target, SquareCheck as CheckSquare, Heart, DollarSign, Users, Zap, TrendingUp, TrendingDown, Minus, Sun, Moon, Brain, Battery, BatteryMedium, BatteryLow, TriangleAlert as AlertTriangle, Sparkles, ChevronRight, Eye, EyeOff, Settings, Coffee, Calendar, Clock, Award, Rocket } from 'lucide-react';
-import { useStore } from './store';
-import { Card, SectionHeader, Badge, ProgressBar, ScoreRing } from './components/ui';
+import { Target, CheckSquare as CheckSquare, Heart, DollarSign, Users, Zap, TrendingUp, TrendingDown, Minus, Sun, Moon, Brain, Battery, BatteryMedium, BatteryLow, AlertTriangle as AlertTriangle, Sparkles, ChevronRight, Eye, EyeOff, Settings, Coffee, Calendar, Clock, Award, Rocket } from 'lucide-react';
+import { useStore } from '../store';
+import { Card, SectionHeader, Badge, ProgressBar, ScoreRing } from '../components/ui';
 
 export default function LifeDashboard() {
   const { state } = useStore();

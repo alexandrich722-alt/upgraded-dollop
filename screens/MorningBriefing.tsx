@@ -2,10 +2,10 @@
 // Daily morning summary for intentional days
 
 import { useState, useEffect, useMemo } from 'react';
-import { Sun, Zap, Target, TrendingUp, TrendingDown, Minus, Heart, MessageCircle, DollarSign, TriangleAlert as AlertTriangle, Sparkles, CircleCheck as CheckCircle2, ArrowRight, Coffee, Brain, Battery, BatteryMedium, BatteryLow } from 'lucide-react';
-import { useStore } from './store';
-import { Card, SectionHeader, Badge } from './components/ui';
-import { TodayMission } from './types';
+import { Sun, Zap, Target, TrendingUp, TrendingDown, Minus, Heart, MessageCircle, DollarSign, AlertTriangle as AlertTriangle, Sparkles, CheckCircle as CheckCircle2, ArrowRight, Coffee, Brain, Battery, BatteryMedium, BatteryLow } from 'lucide-react';
+import { useStore } from '../store';
+import { Card, SectionHeader, Badge } from '../components/ui';
+import { TodayMission } from '../types';
 
 interface MorningBriefingProps {
   onClose?: () => void;

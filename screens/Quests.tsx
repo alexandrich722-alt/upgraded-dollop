@@ -2,7 +2,7 @@
 // Analyzes user data to find behavioral patterns, correlations, and insights
 
 import type { NovaState, PatternInsight } from '../types';
-import { uid, now, avg } from './helpers'; // todayStr imported via new Date()
+import { uid, now, avg } from '../lib/helpers';
 
 export function detectPatterns(state: NovaState): PatternInsight[] {
   const insights: PatternInsight[] = [];

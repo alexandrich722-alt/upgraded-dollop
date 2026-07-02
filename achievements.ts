@@ -1,10 +1,2 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+// Re-export from helpers.ts where ALL_ACHIEVEMENTS is defined
+export { ALL_ACHIEVEMENTS, checkAchievements, getAchievementById, getTotalAchievementXP, getAchievementProgress } from './helpers';

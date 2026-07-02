@@ -1,80 +1,193 @@
-import { Component, type ReactNode, type ErrorInfo } from 'react';
-import { AlertTriangle, RefreshCw, Download, Trash2 } from 'lucide-react';
-import { STORAGE_KEY } from '../lib/constants';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-interface Props { children: ReactNode; }
-interface State { hasError: boolean; error: Error | null; }
-
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null };
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+/* NOVA Life OS - Tailwind CSS Configuration */
+@layer base {
+  :root {
+    --accent-cyan: #22d3ee;
+    --accent-violet: #a78bfa;
+    --accent-emerald: #34d399;
+    --accent-gold: #fbbf24;
+    --accent-rose: #fb7185;
+    --accent-blue: #60a5fa;
+    --accent-amber: #f59e0b;
+    --nova-bg: #0a0a1b;
+    --nova-card: #12122a;
+    --nova-surface: #1c1c36;
+    --nova-border: #2e2e5a;
+    --nova-text: #f0f0ff;
+    --nova-dim: #a0a0c0;
+    --nova-muted: #707090;
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('NOVA Error Boundary:', error, info);
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--nova-bg);
+    color: var(--nova-text);
+    min-height: 100vh;
   }
+}
 
-  handleReload = () => {
-    this.setState({ hasError: false, error: null });
-    window.location.reload();
-  };
-
-  handleExport = () => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const blob = new Blob([raw], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `nova-error-backup-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-    } catch { /* ignore */ }
-  };
-
-  handleReset = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    window.location.reload();
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-nova-bg flex items-center justify-center p-4">
-          <div className="max-w-md w-full">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent-rose/15 flex items-center justify-center border border-accent-rose/20">
-                <AlertTriangle className="w-8 h-8 text-accent-rose" />
-              </div>
-              <h1 className="font-display text-xl font-bold text-nova-text mb-2">Something went wrong</h1>
-              <p className="text-sm text-nova-dim">NOVA encountered an error. Your data is safe — export it before resetting.</p>
-            </div>
-
-            {this.state.error && (
-              <div className="glass rounded-xl p-3 mb-4 max-h-32 overflow-y-auto no-scrollbar">
-                <p className="text-xs font-mono text-accent-rose/80">{this.state.error.message}</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <button onClick={this.handleReload} className="btn-primary w-full">
-                <RefreshCw className="w-4 h-4" /> Reload App
-              </button>
-              <button onClick={this.handleExport} className="btn-ghost w-full">
-                <Download className="w-4 h-4" /> Export Data (Backup)
-              </button>
-              <button onClick={this.handleReset} className="btn-danger w-full">
-                <Trash2 className="w-4 h-4" /> Reset Local Cache
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
+@layer components {
+  .card {
+    background: rgba(18, 18, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(46, 46, 90, 0.6);
+    border-radius: 1rem;
   }
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+  .card-hover:hover {
+    border-color: rgba(34, 211, 238, 0.3);
+    transform: translateY(-2px);
+  }
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .glass-strong {
+    background: rgba(12, 12, 30, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(46, 46, 90, 0.8);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+    color: var(--nova-bg);
+  }
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--nova-dim);
+    border: 1px solid var(--nova-border);
+  }
+  .btn-ghost:hover {
+    background: var(--nova-surface);
+    color: var(--nova-text);
+  }
+  .btn-danger {
+    background: rgba(251, 113, 133, 0.15);
+    color: var(--accent-rose);
+    border: 1px solid rgba(251, 113, 133, 0.3);
+  }
+  .btn-danger:hover {
+    background: rgba(251, 113, 133, 0.25);
+  }
+  .input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    background: var(--nova-surface);
+    border: 1px solid var(--nova-border);
+    border-radius: 0.75rem;
+    color: var(--nova-text);
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+  }
+  .input::placeholder {
+    color: var(--nova-muted);
+  }
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--nova-dim);
+    margin-bottom: 0.375rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--nova-surface) 25%, var(--nova-border) 50%, var(--nova-surface) 75%);
+    background-size: 200% 100%;
+    animation: skeleton 1.5s infinite;
+    border-radius: 0.5rem;
+  }
+  .gradient-mesh {
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0%, rgba(167, 139, 250, 0.08) 100%);
+  }
+  .gradient-mesh-violet {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(96, 165, 250, 0.1) 100%);
+  }
+  .gradient-mesh-gold {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 113, 133, 0.1) 100%);
+  }
+  .gradient-mesh-emerald {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(34, 211, 238, 0.1) 100%);
+  }
+}
+
+@layer utilities {
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .shadow-glow-cyan {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
